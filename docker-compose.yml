@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # 1. СЕРВИС ПРИЛОЖЕНИЯ FASTAPI
+  app:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      # Настройки PostgreSQL 
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: app_db
+      DB_HOST: db
+
+      # Настройки Redis 
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+    depends_on:
+      - db
+      - cache
+
+  # 2. СЕРВИС БАЗЫ ДАННЫХ POSTGRESQL
+  db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: app_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    
+
+  # 3. СЕРВИС КЭШИРОВАНИЯ REDIS
+  cache:
+    image: redis:7-alpine
+    restart: always
+    
+
+# Volumes для сохранения данных БД между запусками
+volumes:
+  postgres_data:
